@@ -1,0 +1,26 @@
+{
+  "name": "furry-text-search",
+  "version": "1.0.0",
+  "description": "A very simple furry/fuzzy text search library based on Fuse.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "publish-beta": "npm run build && npm publish --tag beta"
+  },
+  "keywords": [
+    "fuzzy",
+    "search",
+    "text",
+    "index"
+  ],
+  "author": "ish <ish@ish.works>",
+  "license": "Apache-2.0",
+  "files": [
+    "/dist"
+  ],
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  }
+}
