@@ -1,12 +1,13 @@
 {
   "name": "furry-text-search",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A very simple furry/fuzzy text search library based on Fuse.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
+    "publish": "npm run build && npm publish",
     "publish-beta": "npm run build && npm publish --tag beta"
   },
   "keywords": [
@@ -15,6 +16,14 @@
     "text",
     "index"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dvorakroth/furry-text-search.git"
+  },
+  "homepage": "https://github.com/dvorakroth/furry-text-search#readme",
+  "bugs": {
+    "url": "https://github.com/dvorakroth/furry-text-search/issues"
+  },
   "author": "ish <ish@ish.works>",
   "license": "Apache-2.0",
   "files": [
