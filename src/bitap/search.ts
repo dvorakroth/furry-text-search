@@ -13,10 +13,8 @@ export default function search(
     patternAlphabet: {[char: string]: number},
     threshold: number
 ): SearchResult {
-    const ignoreLocation = true;
-
     if (pattern.length > MAX_BITS) {
-        throw "too many bits in pattern: " + pattern;
+        throw new Error("Too many bits in pattern: " + pattern);
     }
 
     const patternLen = pattern.length
@@ -52,8 +50,8 @@ export default function search(
         // Run a binary search to determine how far from the match location we can stray
         // at this error level.
 
-        let start = 0;
-        let finish = textLen;
+        const start = 0;
+        const finish = textLen;
 
         // Initialize the bit array
         let bitArr: number[] = Array(finish + 2);
@@ -103,20 +101,19 @@ export default function search(
         lastBitArr = bitArr
     }
 
+    // Count exact matches (those with a score of 0) to be "almost" exact
     finalScore = Math.max(0.001, finalScore);
 
-    // const indices = convertMaskToIndices(matchMask, 1)
-    const isMatch = (bestLocation >= 0);// && (indices.length >= 0);
+    const isMatch = (bestLocation >= 0);
     if (isMatch) {
         return {
-                isMatch,
-                // Count exact matches (those with a score of 0) to be "almost" exact
+                isMatch: true,
                 score: finalScore,
-                matchMask: matchMask
+                matchMask
         };
     } else {
         return {
-            isMatch,
+            isMatch: false,
             score: finalScore,
             matchMask: []
         }
@@ -130,5 +127,5 @@ export type SearchResult = {
 } | {
     isMatch: false;
     score: number;
-    matchMask: never[]|undefined;
+    matchMask: never[] | undefined;
 };
