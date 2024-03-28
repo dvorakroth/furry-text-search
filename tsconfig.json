@@ -2,6 +2,7 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
       "noImplicitAny": true,
+      "strict": true,
       "noUncheckedIndexedAccess": true,
       "module": "node16",
       "target": "es2017",

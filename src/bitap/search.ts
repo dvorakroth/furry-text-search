@@ -65,20 +65,20 @@ export default function search(
             let charMatch = patternAlphabet[text.charAt(currentLocation)]
 
             // First pass: exact match
-            bitArr[j] = ((bitArr[j + 1] << 1) | 1) & (charMatch ?? 0)
+            bitArr[j] = ((bitArr[j + 1]! << 1) | 1) & (charMatch ?? 0)
 
             // Subsequent passes: fuzzy match
             if (i) {
                 bitArr[j] |=
-                    ((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1 | lastBitArr[j + 1]
+                    ((lastBitArr[j + 1]! | lastBitArr[j]!) << 1) | 1 | lastBitArr[j + 1]!
             }
 
-            if (bitArr[j] & mask) {
+            if (bitArr[j]! & mask) {
                 // Speed up: quick bool to int conversion (i.e, `charMatch ? 1 : 0`)
                 matchMask[currentLocation] = +!!charMatch
 
                 if (i) {
-                    for (let k = 1; bitArr[currentLocation + k] > 3; k++) {
+                    for (let k = 1; bitArr[currentLocation + k]! > 3; k++) {
                         matchMask[currentLocation + k] = 1;
                     }
                 }
