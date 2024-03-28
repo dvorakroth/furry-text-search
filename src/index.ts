@@ -5,5 +5,6 @@ export {
     FurrySearchMatch,
     FurrySearchResult,
     isFurrySearchResult,
-    FurrySortFunc
+    FurrySortFunc,
+    FurrySearchOptions,
 } from "./furryindex";

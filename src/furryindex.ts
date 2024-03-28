@@ -12,6 +12,67 @@ import { SearchResult } from "./bitap/search";
 //      only type gershayim on their keyboard usually; so they all need
 //      to just be exactly the same)
 
+export type FurrySearchOptions = {
+    /**
+     * What is the maximum score allowed before we consider something to be
+     * not-found? (passed as an argument to the bitap function)
+     * 
+     * Chef's tip: try something around 0.24-0.35!
+     */
+    threshold: number;
+
+    /**
+     * Should we return objects that didn't match at all? (And have score 1)
+     * 
+     * Default: false
+     */
+    returnExcluded?: boolean;
+
+    /**
+     * After doing the bitap search, multiply an item's score by this number if
+     * a match was found in the first 3 characters of the string to be searched
+     * 
+     * null/undefined means this logic is disabled
+     * 
+     * Chef's tip: try a value of 0.2-0.5
+     */
+    multiplierForMatchCloseToStart?: number | null | undefined;
+
+    /**
+     * After doing the bitap search, multiply an item's score by this number if
+     * a match was found right after a space character.
+     * 
+     * null/undefined means this logic is disabled
+     * 
+     * I think the same value as `multiplierForMatchCloseToStart` should be ok?
+     */
+    multiplierForMatchAfterSpace?: number | null | undefined;
+
+    /**
+     * When `multiplierForMatchAfterSpace` is not null/undefined, this is the
+     * list of characters that count as spaces for our purposes.
+     * 
+     * Default: [' '] (just the regular ascii space)
+     */
+    spaceCharacters?: string[];
+
+    /**
+     * After doing the bitap search, multiply an item's score by this number if
+     * the matches were found in vaguely the same order that they're given in.
+     * 
+     * The idea is that when we're told to search ["tel", "aviv"], finding the
+     * string "tel" before "aviv" is generally more better than finding the
+     * string "aviv" before "tel"
+     * 
+     * null/undefined means this logic is disabled
+     * 
+     * Chef's tip: try 0.1
+     */
+    multiplierForMatchesInOrder?: number | null | undefined;
+};
+
+const DEFAULT_SPACE_CHARS = [' '];
+
 export class FurryIndex<T> {
     originalObjects: T[];
     keys: FurryKeyDefinition<T>[];
@@ -44,7 +105,28 @@ export class FurryIndex<T> {
         }
     }
 
-    search(patterns: string[], threshold: number, returnExcluded: boolean) {
+    // multiple function signatures for backwards compatibility hopefully!! lol
+    search(patterns: string[], options: FurrySearchOptions): FurrySearchResult<T>[];
+    search(patterns: string[], threshold: number, returnExcluded?: boolean): FurrySearchResult<T>[];
+    search(patterns: string[], thresholdOrOptions: number | FurrySearchOptions, optionalReturnExcluded?: boolean) {
+        const optionsObj = typeof thresholdOrOptions === "object" ? thresholdOrOptions : {
+            threshold: thresholdOrOptions,
+            returnExcluded: !!optionalReturnExcluded
+        };
+
+        const {
+            threshold,
+            returnExcluded,
+            multiplierForMatchCloseToStart,
+            multiplierForMatchAfterSpace,
+            multiplierForMatchesInOrder
+        } = optionsObj;
+        const shouldRewardMatchesAtStart = multiplierForMatchCloseToStart !== null && multiplierForMatchCloseToStart !== undefined;
+        const shouldRewardMatchesAfterSpace = multiplierForMatchAfterSpace !== null && multiplierForMatchAfterSpace !== undefined;
+        const shouldRewardMatchesInOrder = multiplierForMatchesInOrder !== null && multiplierForMatchesInOrder !== undefined;
+
+        const spaceCharacters = optionsObj.spaceCharacters ?? DEFAULT_SPACE_CHARS;
+
         const searchers = patterns.map(p => new BitapSearch(p, threshold));
         const numKeys = this.keys.length;
 
@@ -52,6 +134,8 @@ export class FurryIndex<T> {
 
         for (const obj of this.processedObjects) {
             const matches = new Array<SearchResult[]>(numKeys); // matches[keyIndex][valueIndex || 0]
+
+            // for each pattern, have we found any matches for it?
             const hasMatchByPattern = new Array<boolean>(patterns.length);
 
             let totalScore = 1;
@@ -79,6 +163,10 @@ export class FurryIndex<T> {
                     if (!innerValue) {
                         continue;
                     }
+
+                    // for every pattern+value combo -- at what index was the
+                    // first match we found?
+                    const firstMatchIdxByPattern = new Array<number | null>(patterns.length);
 
                     if (useExactSearch) {
                         for (let patIndex = 0; patIndex < patterns.length; patIndex++) {
@@ -109,14 +197,38 @@ export class FurryIndex<T> {
 
                             if (newResult?.isMatch && newResult.matchMask !== undefined) {
                                 hasMatchByPattern[patIndex] = true;
-                                fieldScore = fieldScore == null ? newResult.score : Math.min(fieldScore, newResult.score);
+                                if (shouldRewardMatchesInOrder || shouldRewardMatchesAfterSpace) {
+                                    const firstMatchIdx = firstMatchIdxByPattern[patIndex] = newResult.matchMask.findIndex(b => !!b);
+
+                                    if (shouldRewardMatchesAfterSpace && spaceCharacters.includes(valueRaw[firstMatchIdx - 1]!)) {
+                                        newResult.score *= multiplierForMatchAfterSpace;
+                                    }
+                                }
+
+                                // if the match is in the first 3 chars of the string, it's probably better than matches that aren't
+                                if (shouldRewardMatchesAtStart) {
+                                    if (newResult.matchMask[0] || newResult.matchMask[1] || newResult.matchMask[2]) {
+                                        newResult.score *= multiplierForMatchCloseToStart;
+                                    }
+                                }
 
                                 const existingResult = matchesForKey[valueIndex];
 
                                 if (!existingResult?.matchMask) {
                                     matchesForKey[valueIndex] = newResult;
+                                    fieldScore = newResult.score;
                                 } else {
-                                    existingResult.score = Math.min(newResult.score, existingResult.score);
+                                    if (shouldRewardMatchesInOrder && patIndex > 0) {
+                                        const previousPatternStart = firstMatchIdxByPattern[patIndex - 1]!;
+                                        if (firstMatchIdxByPattern[patIndex]! > previousPatternStart) {
+                                            // this pattern starts after the previous pattern -- this is generally a good thing
+                                            // because if we search ["tel", "aviv"], we want to match "tel aviv" higher than "aviv tel"
+                                            
+                                            newResult.score *= multiplierForMatchesInOrder;
+                                        }
+                                    }
+                                    
+                                    existingResult.score = fieldScore = Math.min(newResult.score, existingResult.score);
                                     for (
                                         let i = 0;
                                         i < Math.max(existingResult.matchMask?.length ?? 0, newResult.matchMask?.length ?? 0);
