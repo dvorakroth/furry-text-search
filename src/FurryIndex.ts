@@ -92,33 +92,27 @@ export type FurrySearchOptions = {
 const DEFAULT_SPACE_CHARS = [" "];
 
 export class FurryIndex<T> {
-  originalObjects: T[];
-  keys: FurryKeyDefinition<T>[];
   totalKeyWeight: number;
-  sortCompareFunc: FurrySortFunc<T>;
-
   processedObjects: ProcessedObject[];
 
   constructor(
-    objects: T[],
-    keys: FurryKeyDefinition<T>[],
-    sortCompareFunc: FurrySortFunc<T>,
+    public originalObjects: T[],
+    public keys: FurryKeyDefinition<T>[],
+    public sortCompareFunc?: FurrySortFunc<T>,
+    public preSortScoreAdjustment?: FurryScoreAdjustmentFunc<T>,
   ) {
-    this.originalObjects = objects;
-    this.keys = keys;
     this.totalKeyWeight = 0;
-    this.sortCompareFunc = sortCompareFunc;
 
     for (const k of keys) {
       this.totalKeyWeight += k.weight || 1;
     }
 
-    this.processedObjects = new Array(objects.length);
+    this.processedObjects = new Array(originalObjects.length);
 
-    for (let i = 0; i < objects.length; i++) {
+    for (let i = 0; i < originalObjects.length; i++) {
       this.processedObjects[i] = {
         index: i,
-        data: keys.map(({ get }) => get(objects[i]!)),
+        data: keys.map(({ get }) => get(originalObjects[i]!)),
       };
     }
   }
@@ -332,7 +326,7 @@ export class FurryIndex<T> {
 
       if (allPatternsMatched) {
         // yes!
-        result.push({
+        const item: FurrySearchResult<T> = {
           furrySearchResult: true,
           isMatch: true,
           idx: obj.index,
@@ -345,7 +339,13 @@ export class FurryIndex<T> {
                 : null,
             ),
           ),
-        });
+        };
+
+        if (this.preSortScoreAdjustment) {
+          item.score = this.preSortScoreAdjustment(item);
+        }
+
+        result.push(item);
       } else if (returnExcluded) {
         result.push({
           furrySearchResult: true,
@@ -396,3 +396,5 @@ export type FurrySortFunc<T> = (
   a: FurrySearchResult<T>,
   b: FurrySearchResult<T>,
 ) => number;
+
+export type FurryScoreAdjustmentFunc<T> = (a: FurrySearchResult<T>) => number;
