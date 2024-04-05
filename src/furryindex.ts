@@ -3,7 +3,7 @@
 
 // see: https://github.com/krisk/Fuse
 
-import BitapSearch from "./bitap";
+import { BitapSearch } from "./bitap/BitapSearch";
 import convertMaskToIndices from "./bitap/convertMaskToIndices";
 import { SearchResult } from "./bitap/search";
 

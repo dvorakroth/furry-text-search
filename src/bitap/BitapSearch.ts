@@ -11,7 +11,7 @@ interface PatternChunk {
   startIndex: number;
 }
 
-export default class BitapSearch {
+export class BitapSearch {
   pattern: string;
   chunks: PatternChunk[];
   threshold: number;
