@@ -1,19 +1,18 @@
 {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "compilerOptions": {
-      "noImplicitAny": true,
-      "strict": true,
-      "noUncheckedIndexedAccess": true,
-      "module": "node16",
-      "target": "es2017",
-      "allowJs": true,
-      "moduleResolution": "node16",
-      "importsNotUsedAsValues": "remove",
-      "noUnusedParameters": false,
-      "declaration": true,
-      "outDir": "./dist"
-    },
-    "include": [
-      "src/**/*"
-    ]
-  }
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "module": "node16",
+    "target": "es2017",
+    "allowJs": true,
+    "moduleResolution": "node16",
+    "importsNotUsedAsValues": "remove",
+    "noUnusedParameters": false,
+    "declaration": true,
+    "outDir": "./dist",
+    "sourceMap": true
+  },
+  "include": ["src/**/*"]
+}
