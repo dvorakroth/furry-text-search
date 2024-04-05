@@ -1,0 +1,8 @@
+{
+  "singleQuote": false,
+  "trailingComma": "all",
+  "requirePragma": false,
+  "arrowParens": "always",
+  "endOfLine": "auto",
+  "printWidth": 80
+}
