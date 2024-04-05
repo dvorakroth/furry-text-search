@@ -7,4 +7,4 @@ export {
   isFurrySearchResult,
   FurrySortFunc,
   FurrySearchOptions,
-} from "./furryindex";
+} from "./FurryIndex";
