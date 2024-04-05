@@ -11,6 +11,7 @@ export default function search(
   pattern: string,
   patternAlphabet: { [char: string]: number },
   threshold: number,
+  exactMatchScore: number,
 ): SearchResult {
   if (pattern.length > MAX_BITS) {
     throw new Error("Too many bits in pattern: " + pattern);
@@ -101,7 +102,7 @@ export default function search(
   }
 
   // Count exact matches (those with a score of 0) to be "almost" exact
-  finalScore = Math.max(0.001, finalScore);
+  finalScore = Math.max(exactMatchScore, finalScore);
 
   const isMatch = bestLocation >= 0;
   if (isMatch) {

@@ -11,15 +11,21 @@ interface PatternChunk {
   startIndex: number;
 }
 
+export interface BitapSearchOptions {
+  threshold: number;
+  exactMatchScore: number;
+  fullExactMatchScore: number;
+}
+
 export class BitapSearch {
   pattern: string;
   chunks: PatternChunk[];
-  threshold: number;
+  options: BitapSearchOptions;
 
-  constructor(pattern: string, threshold: number) {
+  constructor(pattern: string, options: BitapSearchOptions) {
     this.pattern = pattern;
     this.chunks = [];
-    this.threshold = threshold;
+    this.options = { ...options };
 
     for (let i = 0; i < pattern.length; i += MAX_BITS) {
       const subpattern = pattern.substring(i, i + MAX_BITS);
@@ -50,7 +56,7 @@ export class BitapSearch {
       // Exact match
       return {
         isMatch: true,
-        score: 0,
+        score: this.options.fullExactMatchScore,
         matchMask,
       };
     }
@@ -67,7 +73,8 @@ export class BitapSearch {
         text,
         subpattern,
         alphabet,
-        this.threshold,
+        this.options.threshold,
+        this.options.exactMatchScore,
       );
 
       if (isMatch) {

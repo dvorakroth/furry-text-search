@@ -69,6 +69,24 @@ export type FurrySearchOptions = {
    * Chef's tip: try 0.1
    */
   multiplierForMatchesInOrder?: number | null | undefined;
+
+  /**
+   * What score should we give to exact matches within a larger string?
+   *
+   * Chef's tip: try 0
+   *
+   * Default: 0.001 for compatibility-with-older-versions reasons.
+   *
+   * (if i ever decide to up this thing to 1.0.0, this will be defaulted to 0)
+   */
+  exactMatchScore?: number | null | undefined;
+
+  /**
+   * What score should we give to an exact match that's the entire string?
+   *
+   * Default: 0
+   */
+  fullExactMatchScore?: number | null | undefined;
 };
 
 const DEFAULT_SPACE_CHARS = [" "];
@@ -145,9 +163,15 @@ export class FurryIndex<T> {
       multiplierForMatchesInOrder !== null &&
       multiplierForMatchesInOrder !== undefined;
 
+    const fullExactMatchScore = optionsObj.fullExactMatchScore ?? 0;
+    const exactMatchScore = optionsObj.exactMatchScore ?? 0.001;
+
     const spaceCharacters = optionsObj.spaceCharacters ?? DEFAULT_SPACE_CHARS;
 
-    const searchers = patterns.map((p) => new BitapSearch(p, threshold));
+    const searchers = patterns.map(
+      (p) =>
+        new BitapSearch(p, { threshold, exactMatchScore, fullExactMatchScore }),
+    );
     const numKeys = this.keys.length;
 
     const result: FurrySearchResult<T>[] = [];
