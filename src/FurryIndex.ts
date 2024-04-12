@@ -175,15 +175,18 @@ export class FurryIndex<T> {
 
       // for each pattern, have we found any matches for it?
       const hasMatchByPattern = new Array<boolean>(patterns.length);
-
-      let totalScore = 1;
+      const scoresAndWeightsByKey = new Array<[number, number] | null>(numKeys);
+      let totalKeyWeight = 0;
 
       for (let keyIndex = 0; keyIndex < numKeys; keyIndex++) {
         const keyDefinition = this.keys[keyIndex];
         if (!keyDefinition) continue;
 
-        const { weight = 1, useExactSearch } = keyDefinition;
-        const relativeWeight = weight / this.totalKeyWeight;
+        const {
+          weight = 1,
+          useExactSearch,
+          onlyCountWeightIfSomethingMatches,
+        } = keyDefinition;
         const valueRaw = obj.data[keyIndex];
 
         if (!valueRaw) {
@@ -307,13 +310,23 @@ export class FurryIndex<T> {
           }
         }
 
-        // incorporate fieldScore into totalScore?
         if (fieldScore !== null) {
-          totalScore *= Math.pow(
-            fieldScore === 0 ? Number.EPSILON : fieldScore,
-            relativeWeight,
-          );
+          scoresAndWeightsByKey[keyIndex] = [fieldScore, weight];
+          totalKeyWeight += weight;
+        } else {
+          scoresAndWeightsByKey[keyIndex] = null;
+
+          if (!onlyCountWeightIfSomethingMatches) {
+            totalKeyWeight += weight;
+          }
         }
+        // incorporate fieldScore into totalScore?
+        // if (fieldScore !== null) {
+        // totalScore *= Math.pow(
+        //   fieldScore === 0 ? Number.EPSILON : fieldScore,
+        //   relativeWeight,
+        // );
+        // }
       }
 
       // so, did this object match at least SOMETHING against each pattern?
@@ -326,6 +339,22 @@ export class FurryIndex<T> {
 
       if (allPatternsMatched) {
         // yes!
+
+        let totalScore = 1;
+        for (let keyIndex = 0; keyIndex < numKeys; keyIndex++) {
+          const scoreAndWeight = scoresAndWeightsByKey[keyIndex];
+          if (!scoreAndWeight) {
+            continue;
+          }
+
+          const [fieldScore, fieldWeight] = scoreAndWeight;
+
+          totalScore *= Math.pow(
+            fieldScore || Number.EPSILON,
+            fieldWeight / totalKeyWeight,
+          );
+        }
+
         const item: FurrySearchResult<T> = {
           furrySearchResult: true,
           isMatch: true,
@@ -370,6 +399,7 @@ export interface FurryKeyDefinition<T> {
   get: (obj: T) => string | string[];
   weight?: number;
   useExactSearch?: boolean;
+  onlyCountWeightIfSomethingMatches?: boolean;
 }
 
 export interface ProcessedObject {
