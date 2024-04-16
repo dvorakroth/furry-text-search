@@ -320,13 +320,6 @@ export class FurryIndex<T> {
             totalKeyWeight += weight;
           }
         }
-        // incorporate fieldScore into totalScore?
-        // if (fieldScore !== null) {
-        // totalScore *= Math.pow(
-        //   fieldScore === 0 ? Number.EPSILON : fieldScore,
-        //   relativeWeight,
-        // );
-        // }
       }
 
       // so, did this object match at least SOMETHING against each pattern?
