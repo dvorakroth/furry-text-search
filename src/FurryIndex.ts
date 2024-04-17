@@ -272,7 +272,10 @@ export class FurryIndex<T> {
 
                 if (!existingResult?.matchMask) {
                   matchesForKey[valueIndex] = newResult;
-                  fieldScore = newResult.score;
+                  fieldScore =
+                    fieldScore === null
+                      ? newResult.score
+                      : Math.min(fieldScore, newResult.score);
                 } else {
                   if (shouldRewardMatchesInOrder && patIndex > 0) {
                     const previousPatternStart =
