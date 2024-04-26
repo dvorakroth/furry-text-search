@@ -8,8 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --write 'src/**/*.ts'",
     "build": "tsc",
-    "publish": "npm run build && npm publish",
-    "publish-beta": "npm run build && npm publish --tag beta"
+    "prepack": "npm run build"
   },
   "keywords": [
     "fuzzy",
