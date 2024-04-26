@@ -92,7 +92,6 @@ export type FurrySearchOptions = {
 const DEFAULT_SPACE_CHARS = [" "];
 
 export class FurryIndex<T> {
-  totalKeyWeight: number;
   processedObjects: ProcessedObject[];
 
   constructor(
@@ -101,12 +100,6 @@ export class FurryIndex<T> {
     public sortCompareFunc?: FurrySortFunc<T>,
     public preSortScoreAdjustment?: FurryScoreAdjustmentFunc<T>,
   ) {
-    this.totalKeyWeight = 0;
-
-    for (const k of keys) {
-      this.totalKeyWeight += k.weight || 1;
-    }
-
     this.processedObjects = new Array(originalObjects.length);
 
     for (let i = 0; i < originalObjects.length; i++) {
