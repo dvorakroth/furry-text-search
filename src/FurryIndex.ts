@@ -388,6 +388,12 @@ export interface FurryKeyDefinition<T> {
   get: (obj: T) => string | string[];
   weight?: number;
   useExactSearch?: boolean;
+
+  /**
+   * Only count this key's weight towards the total weight of keys in an object,
+   * if it's a match. So if we didn't match anything for a key, its weight won't
+   * "dilute"(?) the other weights for that item.
+   */
   onlyCountWeightIfSomethingMatches?: boolean;
 }
 
