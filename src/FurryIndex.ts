@@ -49,6 +49,16 @@ export type FurrySearchOptions = {
   multiplierForMatchAfterSpace?: number | null | undefined;
 
   /**
+   * After doing the bitap search, multiply an item's score by this number if
+   * a match was found right before a space character.
+   *
+   * null/undefined means this logic is disabled
+   *
+   * I think the same value as `multiplierForMatchAfterSpace` should be ok?
+   */
+  multiplierForMatchBeforeSpace?: number | null | undefined;
+
+  /**
    * When `multiplierForMatchAfterSpace` is not null/undefined, this is the
    * list of characters that count as spaces for our purposes.
    *
@@ -138,6 +148,7 @@ export class FurryIndex<T> {
       returnExcluded,
       multiplierForMatchCloseToStart,
       multiplierForMatchAfterSpace,
+      multiplierForMatchBeforeSpace,
       multiplierForMatchesInOrder,
     } = optionsObj;
     const shouldRewardMatchesAtStart =
@@ -146,6 +157,9 @@ export class FurryIndex<T> {
     const shouldRewardMatchesAfterSpace =
       multiplierForMatchAfterSpace !== null &&
       multiplierForMatchAfterSpace !== undefined;
+    const shouldRewardMatchesBeforeSpace =
+      multiplierForMatchBeforeSpace !== null &&
+      multiplierForMatchBeforeSpace !== undefined;
     const shouldRewardMatchesInOrder =
       multiplierForMatchesInOrder !== null &&
       multiplierForMatchesInOrder !== undefined;
@@ -247,6 +261,24 @@ export class FurryIndex<T> {
                     spaceCharacters.includes(valueRaw[firstMatchIdx - 1]!)
                   ) {
                     newResult.score *= multiplierForMatchAfterSpace;
+                  }
+                }
+
+                if (shouldRewardMatchesBeforeSpace) {
+                  let lastMatchIdx: number | null = null;
+
+                  for (let i = newResult.matchMask.length - 1; i >= 0; i--) {
+                    if (newResult.matchMask[i]) {
+                      lastMatchIdx = i;
+                      break;
+                    }
+                  }
+
+                  if (
+                    lastMatchIdx !== null &&
+                    spaceCharacters.includes(valueRaw[lastMatchIdx + 1]!)
+                  ) {
+                    newResult.score *= multiplierForMatchBeforeSpace;
                   }
                 }
 
