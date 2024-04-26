@@ -1,6 +1,6 @@
 {
   "name": "furry-text-search",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A very simple furry/fuzzy text search library based on Fuse.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
